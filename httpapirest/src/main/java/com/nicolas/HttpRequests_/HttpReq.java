@@ -1,6 +1,7 @@
 package com.nicolas.HttpRequests_;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.nicolas.Cadastro.CadastroUsuario;
 import com.nicolas.Login.Login;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -26,8 +27,31 @@ class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+}
 
+class RegistroRequest {
+    private String cpf;
+    private String password;
+    private String nome;
+    
+    public String getNome() {
+        return nome;
+    }
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+    public String getCpf() {
+        return cpf;
+    }
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
 
 public class HttpReq {
@@ -36,6 +60,8 @@ public class HttpReq {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
         
         server.createContext("/login", new LoginPost());
+        server.createContext("/register", new Cadastro());
+
  
         System.out.println("Servidor iniciado na porta 8080");
         server.start();
@@ -82,5 +108,34 @@ public class HttpReq {
         }
     }
     
-    
+    public class Cadastro implements HttpHandler{
+            public void handle(HttpExchange exchange) throws IOException{
+                if("POST".equals(exchange.getRequestMethod())){
+
+                    Gson gson = new Gson();
+                    InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
+                    RegistroRequest UserData = gson.fromJson(reader, RegistroRequest.class);
+
+                    String cpf = UserData.getCpf();
+                    String Senha = UserData.getPassword();
+                    String nome = UserData.getNome();
+                    String response = "";
+
+                    if((!cpf.isEmpty() || !Senha.isEmpty()) || !nome.isEmpty()){
+                        boolean validData = CadastroUsuario.VerificaDados(cpf, nome, Senha);
+                        if(validData){
+                            System.out.println("Cpf Valido"); //Validar cpf // Validar Nome // Validar Senha // Tudo certo Cadastrar Usuario no banco e Criar uma conta vinculado ao Id
+                        } else{
+                            System.out.println("Invalido");
+                        }
+                    } 
+                    else{
+                        response = "Nenhum Campo pode estar vazio";
+                    }
+
+                }else{
+                    exchange.sendResponseHeaders(405, -1);
+                }
+            }
+    }
 }   

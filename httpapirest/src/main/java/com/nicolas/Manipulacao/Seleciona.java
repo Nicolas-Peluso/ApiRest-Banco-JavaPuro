@@ -26,7 +26,7 @@ public class Seleciona {
         return "";
     }
 
-    public static String SelectCpfESenha(String cpf){
+    public static String SelectSenha(String cpf){
         try{
             Connection c = Conection.ConectToDb();
             PreparedStatement stm = c.prepareStatement("SELECT cpf, senha FROM Cliente WHERE cpf=?");

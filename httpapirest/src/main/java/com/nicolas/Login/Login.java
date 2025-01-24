@@ -9,7 +9,7 @@ public class Login {
 
     public static String LoginVerifica(String Cpf, String Senha){
         String SenhaEncriptada = Md5.EncriptaMd5(Senha);
-        String SenhaDb = Seleciona.SelectCpfESenha(Cpf);
+        String SenhaDb = Seleciona.SelectSenha(Cpf);
 
         if(SenhaDb.isEmpty()){
             return "";
