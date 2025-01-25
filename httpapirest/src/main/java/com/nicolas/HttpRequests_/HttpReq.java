@@ -11,6 +11,7 @@ import com.nicolas.MD5.Md5;
 import com.nicolas.Operacoes.Saldo;
 import com.nicolas.Operacoes.Saque;
 import com.nicolas.Operacoes.Deposito;
+import com.nicolas.Operacoes.SairDaConta;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -102,8 +103,8 @@ public class HttpReq {
         server.createContext("/deposit", new Despositar());
         server.createContext("/saldo", new PegaSaldo());
         server.createContext("/sacar", new SacarDinheiro());
-
-
+        server.createContext("/sair", new SairConta());
+        server.createContext("/deletar", new DeletarConta());
 
         System.out.println("Servidor iniciado na porta 8080");
         server.start();
@@ -353,6 +354,73 @@ public class SacarDinheiro implements HttpHandler{
 
             if(response.isEmpty()){
                 response = Double.toString(SaqueMon);
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            }else{
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            }
+        }
+}
+}
+    public class SairConta implements HttpHandler{
+        public void handle(HttpExchange exchange) throws IOException{
+            if("GET".equals(exchange.getRequestMethod())){
+                String response = "";
+                boolean logado = EstaLogado.Logado();
+                if(!logado){   
+                    response = "Voce deve estar logado para realizar consultas";
+                }
+
+                if(logado){
+                    SairDaConta.sair();                        
+                }
+
+                if(response.isEmpty()){
+                    response = "Adeus";
+                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }else{
+                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+            }
+    }
+}
+public class DeletarConta implements HttpHandler{
+    public void handle(HttpExchange exchange) throws IOException{
+        Cliente cliente = new Cliente();
+        if("GET".equals(exchange.getRequestMethod())){
+            String response = "";
+            boolean logado = EstaLogado.Logado();
+            if(!logado){   
+                response = "Voce deve estar logado para realizar consultas";
+            }
+
+            while (logado) {
+                if(jwt.ValidaToken(cliente.getTokenSession())){
+                    boolean TemSaldo = com.nicolas.Operacoes.DeletarConta.Deletar();
+                    System.err.println(TemSaldo);
+                    if(!TemSaldo){
+                        response = "Nao é possivel deletar uma conta que possui saldo nela";
+                    }
+                    break;
+                }else{
+                    response = "Token invalido faca login novamete";
+                }
+                break;
+            }
+
+            if(response.isEmpty()){
+                response = "Conta Deletada Com sucesso";
                 exchange.sendResponseHeaders(200, response.getBytes().length);
                 OutputStream os = exchange.getResponseBody();
                 os.write(response.getBytes());
