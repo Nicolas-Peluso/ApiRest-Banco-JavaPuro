@@ -1,12 +1,14 @@
 package com.nicolas.HttpRequests_;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.nicolas.Aux.EstaLogado;
 import com.nicolas.Aux.verifica;
 import com.nicolas.Cadastro.CadastroUsuario;
 import com.nicolas.Cliente.Cliente;
 import com.nicolas.Jwt.jwt;
 import com.nicolas.Login.Login;
 import com.nicolas.MD5.Md5;
+import com.nicolas.Operacoes.Saldo;
 import com.nicolas.Operacoes.Deposito;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -86,6 +88,8 @@ public class HttpReq {
         server.createContext("/login", new LoginPost());
         server.createContext("/register", new Cadastro());
         server.createContext("/deposit", new Despositar());
+        server.createContext("/saldo", new PegaSaldo());
+
 
         System.out.println("Servidor iniciado na porta 8080");
         server.start();
@@ -96,7 +100,7 @@ public class HttpReq {
             Cliente cliente = new Cliente();
 
             if ("POST".equals(exchange.getRequestMethod())) {
-
+                System.err.println("err");
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 LoginRequest UserData = gson.fromJson(reader, LoginRequest.class);
@@ -212,17 +216,15 @@ public class HttpReq {
                 String cpf = UserData.getCpf();
                 double valor = UserData.getValor();
                 String response = "";
-                boolean Clientelogado = true;
+                boolean logado = false;
 
                 if(!(valor == 0.0) && !cpf.isEmpty()){
-                    if(cliente.getTokenSession() == null){
-                        Clientelogado = false;
-                    }
-                    if(!Clientelogado){
+                    logado = EstaLogado.Logado();
+                    if(!logado){
                         response = "é necessario estar logado em uma conta para realizar essa operação";
                     }
 
-                    while(Clientelogado){
+                    while(logado){
                         if(!jwt.ValidaToken(cliente.getTokenSession())){
                             response = "Token De Sessão invalido Faça login novamente";
                             break;
@@ -256,4 +258,46 @@ public class HttpReq {
             }
             } 
         }
+    
+    public class PegaSaldo implements HttpHandler{
+        public void handle(HttpExchange exchange) throws IOException{
+            Cliente cliente = new Cliente();
+            if("GET".equals(exchange.getRequestMethod())){
+                String response = "";
+                double Saldores = 0.0;
+                boolean logado = EstaLogado.Logado();
+                if(!logado){   
+                    response = "Voce deve estar logado para realizar consultas";
+                }
+
+                if(logado){
+                    boolean TokenValido = false;
+                    do{
+                        if(!(jwt.ValidaToken(cliente.getTokenSession()))){
+                            response = "token Exprirado faça login novamente";
+                            break;
+                        }
+                        Saldores = Saldo.ConsultaSaldo(); 
+                        break;
+                       
+                    }while(TokenValido);
+                }
+                if(Saldores == -1.0){
+                    response = "Tente novamente algo deu erra na manipulação dos dados";
+                }
+                if(response.isEmpty()){
+                    response = Double.toString(Saldores);
+                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }else{
+                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+            }
+    }
+}
     }  

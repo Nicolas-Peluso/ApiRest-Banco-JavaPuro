@@ -10,7 +10,7 @@ public class Deposito {
         if(!verifica.VerificaCpf(cpf)){
             return false;
         }
-
+        
         int TempIdClienteDepositoTo = Seleciona.SelecionaIdCliente(cpf);
         
         if(TempIdClienteDepositoTo == -1){
@@ -23,7 +23,10 @@ public class Deposito {
             return false;
         }
 
+        double SaldoAtual = Seleciona.SelecionaSaldo(IdConta);
+        Valor += SaldoAtual;
         Inserir.DepositarDinheiro(Valor, IdConta);
+        Valor = 0;
         return true;
     }
 }

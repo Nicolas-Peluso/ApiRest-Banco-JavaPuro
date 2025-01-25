@@ -24,6 +24,8 @@ public class Login {
         if(SenhaDb.equals(cliente.getSenha())){
             String tk = Seleciona.SelectJWT(cliente.getCpf());
             boolean ValidToken = jwt.ValidaToken(tk);
+            int id = Seleciona.SelecionaIdCliente(cliente.getCpf());
+            cliente.setIdCliente(id);
             if(!ValidToken){
                 cliente.setTokenSession(jwt.GeraToken(cliente.getCpf()));
                 Inserir.InserirToken(cliente.getCpf(), cliente.getTokenSession());

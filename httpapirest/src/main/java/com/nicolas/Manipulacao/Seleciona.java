@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-
 public class Seleciona {
 
     public static int SelecionaIdConta(int IdCliente){
@@ -25,6 +24,21 @@ public class Seleciona {
             System.out.println(e);
         }
         return -1;
+    }
+
+    public static double SelecionaSaldo(int IdConta){
+        try{
+            Connection c = Conection.ConectToDb();
+            PreparedStatement stm = c.prepareStatement("SELECT saldo FROM Conta WHERE IdConta = ?;");
+            stm.setInt(1, IdConta);
+            ResultSet rs = stm.executeQuery();
+            if(rs.next()){
+                return rs.getDouble("saldo");
+            }
+        }catch(SQLException e){ 
+            System.out.println(e);
+        }
+        return -1.0;
     }
 
     public static int SelecionaIdCliente(String cpf){
