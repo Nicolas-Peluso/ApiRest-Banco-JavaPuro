@@ -63,7 +63,6 @@ public class Inserir {
             stm.setDouble(1, valor);
             stm.setInt(2, Conta);
             stm.executeUpdate();
-            System.err.println("Deposito Realizado Com sucesso");
         } catch(SQLException e){
             System.out.println(e);
         }

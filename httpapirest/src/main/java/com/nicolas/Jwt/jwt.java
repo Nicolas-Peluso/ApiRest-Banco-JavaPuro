@@ -36,7 +36,7 @@ public class jwt {
                 .withSubject(cpf)
                 .withClaim("role", "Cliente")
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 10 * 1000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + 3600 * 1000))
                 .sign(Algorithm.HMAC256(j.getJWT_SECRET_WORD()));
         
         return NovoToken;

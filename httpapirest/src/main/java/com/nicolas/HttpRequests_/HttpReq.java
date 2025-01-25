@@ -9,6 +9,7 @@ import com.nicolas.Jwt.jwt;
 import com.nicolas.Login.Login;
 import com.nicolas.MD5.Md5;
 import com.nicolas.Operacoes.Saldo;
+import com.nicolas.Operacoes.Saque;
 import com.nicolas.Operacoes.Deposito;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -80,6 +81,17 @@ class DespotioRequest {
 
 }
 
+class SacarReq {
+    private double valor;
+
+    public double getValor() {
+        return valor;
+    }
+    public void setValor(double valor) {
+        this.valor = valor;
+    }
+}
+
 public class HttpReq {
 
     public void StartServer() throws IOException{
@@ -89,6 +101,8 @@ public class HttpReq {
         server.createContext("/register", new Cadastro());
         server.createContext("/deposit", new Despositar());
         server.createContext("/saldo", new PegaSaldo());
+        server.createContext("/sacar", new SacarDinheiro());
+
 
 
         System.out.println("Servidor iniciado na porta 8080");
@@ -100,7 +114,6 @@ public class HttpReq {
             Cliente cliente = new Cliente();
 
             if ("POST".equals(exchange.getRequestMethod())) {
-                System.err.println("err");
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 LoginRequest UserData = gson.fromJson(reader, LoginRequest.class);
@@ -300,4 +313,57 @@ public class HttpReq {
             }
     }
 }
-    }  
+public class SacarDinheiro implements HttpHandler{
+    public void handle(HttpExchange exchange) throws IOException{
+        Cliente cliente = new Cliente();
+        if("POST".equals(exchange.getRequestMethod())){
+            
+            Gson gson = new Gson();
+            InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
+            SacarReq UserData = gson.fromJson(reader, SacarReq.class);    
+
+            double valor = UserData.getValor();
+
+            String response = "";
+            double SaqueMon = 0.0;
+            boolean logado = EstaLogado.Logado();
+            if(!logado){   
+                response = "Voce deve estar logado para realizar consultas";
+            }
+
+            if(logado){
+                boolean TokenValido = false;
+                do{
+                    if(!(jwt.ValidaToken(cliente.getTokenSession()))){
+                        response = "token Exprirado faça login novamente";
+                        break;
+                    }
+                    SaqueMon = Saque.Sacar(valor);
+                    break;
+                   
+                }while(TokenValido);
+            }
+            if(SaqueMon == -2.0){
+                response = "Saldo insuficiente Para Relizar um saque";
+            }
+
+            if(SaqueMon == -1.0){
+                response = "Algo deu errado durante a operação tente novamente";
+            }
+
+            if(response.isEmpty()){
+                response = Double.toString(SaqueMon);
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            }else{
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            }
+        }
+}
+}
+}  
