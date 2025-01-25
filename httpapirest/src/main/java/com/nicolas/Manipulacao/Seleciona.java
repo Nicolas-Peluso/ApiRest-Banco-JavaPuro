@@ -11,6 +11,22 @@ import java.sql.ResultSet;
 
 public class Seleciona {
 
+    public static int SelecionaIdConta(int IdCliente){
+        try{
+            Connection c = Conection.ConectToDb();
+            PreparedStatement stm = c.prepareStatement("SELECT IdConta FROM Conta WHERE IdCliente = ?");
+            stm.setInt(1, IdCliente);
+            ResultSet rs = stm.executeQuery();
+            if(rs.next()){
+                return rs.getInt("IdConta");
+            }
+
+        }catch(SQLException e){
+            System.out.println(e);
+        }
+        return -1;
+    }
+
     public static int SelecionaIdCliente(String cpf){
         try{
             Connection c = Conection.ConectToDb();
@@ -20,7 +36,6 @@ public class Seleciona {
             if(rs.next()){
                 return rs.getInt("IdCliente");
             }
-
         }catch(SQLException e){
             System.out.println(e);
         }

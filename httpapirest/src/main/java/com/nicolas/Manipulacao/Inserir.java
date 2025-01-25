@@ -55,4 +55,17 @@ public class Inserir {
             System.out.println(e);
         }
     }
+
+    public static void DepositarDinheiro(double valor, int Conta){
+        try{
+            Connection c = Conection.ConectToDb();
+            PreparedStatement stm = c.prepareStatement("UPDATE Conta Set saldo = ? WHERE IdCOnta = ?;");
+            stm.setDouble(1, valor);
+            stm.setInt(2, Conta);
+            stm.executeUpdate();
+            System.err.println("Deposito Realizado Com sucesso");
+        } catch(SQLException e){
+            System.out.println(e);
+        }
+    }   
 }

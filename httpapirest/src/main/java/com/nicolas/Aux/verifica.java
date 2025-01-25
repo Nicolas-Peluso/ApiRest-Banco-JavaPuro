@@ -7,11 +7,20 @@ import com.nicolas.Manipulacao.Seleciona;
 
 public class verifica {
 
-    public static boolean VerificaCpf(){
+    public static boolean VerificaCpf(String cpfFora){
         Cliente cliente = new Cliente();
         //Validação de CPF Matematicamanete;
         //REFATORAR
-        char[] cpfChar = cliente.getCpf().toCharArray();
+        char[] cpfChar;
+
+        if(cpfFora.isEmpty()){
+            cpfChar = cliente.getCpf().toCharArray();
+        } 
+        else{
+            cpfChar = cpfFora.toCharArray();
+
+        }
+
         int Digverifcador1 = 0;
         int Digverifcador2 = 0;
         ArrayList<Integer> cpfInt = new ArrayList<>();
@@ -64,7 +73,7 @@ public class verifica {
 
     public static String VerificaDados(boolean Cadastro){
         Cliente cliente = new Cliente();
-        boolean Cpfvalido = verifica.VerificaCpf();
+        boolean Cpfvalido = verifica.VerificaCpf("");
         if(!Cpfvalido){
             return "cpf";
         }

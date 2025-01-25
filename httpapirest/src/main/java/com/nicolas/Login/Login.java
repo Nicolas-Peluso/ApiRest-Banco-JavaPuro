@@ -10,7 +10,7 @@ public class Login {
 
     public static String LoginVerifica(){
         Cliente cliente = new Cliente();
-        boolean CpfEstruturaValida = verifica.VerificaCpf(); // Verifica Estrutura Do Cpf
+        boolean CpfEstruturaValida = verifica.VerificaCpf(""); // Verifica Estrutura Do Cpf
         if(!CpfEstruturaValida){
             return "cpf";
         }
@@ -22,11 +22,14 @@ public class Login {
         }
         
         if(SenhaDb.equals(cliente.getSenha())){
-            boolean ValidToken = jwt.ValidaToken(cliente.getTokenSession());
+            String tk = Seleciona.SelectJWT(cliente.getCpf());
+            boolean ValidToken = jwt.ValidaToken(tk);
             if(!ValidToken){
                 cliente.setTokenSession(jwt.GeraToken(cliente.getCpf()));
                 Inserir.InserirToken(cliente.getCpf(), cliente.getTokenSession());
+                return cliente.getTokenSession();
             }
+            cliente.setTokenSession(tk);
             return cliente.getTokenSession();
             }    
             else{

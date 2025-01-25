@@ -4,8 +4,10 @@ import com.sun.net.httpserver.HttpServer;
 import com.nicolas.Aux.verifica;
 import com.nicolas.Cadastro.CadastroUsuario;
 import com.nicolas.Cliente.Cliente;
+import com.nicolas.Jwt.jwt;
 import com.nicolas.Login.Login;
 import com.nicolas.MD5.Md5;
+import com.nicolas.Operacoes.Deposito;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -57,6 +59,25 @@ class RegistroRequest {
     }
 }
 
+class DespotioRequest {
+    private String cpf;
+    private double valor;
+
+    public String getCpf() {
+        return cpf;
+    }
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
+    public double getValor() {
+        return valor;
+    }
+    public void setValor(double valor) {
+        this.valor = valor;
+    }
+
+}
+
 public class HttpReq {
 
     public void StartServer() throws IOException{
@@ -64,8 +85,8 @@ public class HttpReq {
         
         server.createContext("/login", new LoginPost());
         server.createContext("/register", new Cadastro());
+        server.createContext("/deposit", new Despositar());
 
- 
         System.out.println("Servidor iniciado na porta 8080");
         server.start();
     }
@@ -176,4 +197,63 @@ public class HttpReq {
                 }
             }
     }
-}   
+
+    //Despoitar
+    public class Despositar implements HttpHandler {
+        public void handle(HttpExchange exchange) throws IOException{
+            Cliente cliente = new Cliente();
+
+            if("POST".equals(exchange.getRequestMethod())){
+
+                Gson gson = new Gson();
+                InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
+                DespotioRequest UserData = gson.fromJson(reader, DespotioRequest.class);
+
+                String cpf = UserData.getCpf();
+                double valor = UserData.getValor();
+                String response = "";
+                boolean Clientelogado = true;
+
+                if(!(valor == 0.0) && !cpf.isEmpty()){
+                    if(cliente.getTokenSession() == null){
+                        Clientelogado = false;
+                    }
+                    if(!Clientelogado){
+                        response = "é necessario estar logado em uma conta para realizar essa operação";
+                    }
+
+                    while(Clientelogado){
+                        if(!jwt.ValidaToken(cliente.getTokenSession())){
+                            response = "Token De Sessão invalido Faça login novamente";
+                            break;
+                        }
+                        boolean DespitoFeito = Deposito.DepositoConta(cpf, valor);
+                        if(!DespitoFeito){
+                            response = "Algo Deu Errado na operação de deposito Verifique os dados";
+                            break;
+                        }      
+                        response = "";
+                        break;
+                    }
+                }
+                else{
+                    response = "cpf nao pode ser vazio e/ou Valor deve ser maior que 0";
+                }
+
+                if(response.isEmpty()){
+                    response = "Deposito Realizado com sucesso";
+                    exchange.sendResponseHeaders(201, response.getBytes().length);
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+                else{
+                    exchange.sendResponseHeaders(301, response.getBytes().length); // Nao permitido
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+            }
+            } 
+        }
+    }  
