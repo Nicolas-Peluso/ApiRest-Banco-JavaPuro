@@ -4,16 +4,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import com.nicolas.Cliente.Cliente;
 import com.nicolas.ConectDb.Conection;
 
 public class Inserir {
+    private static Cliente client = new Cliente();
 
-    private static void InserirConta(String cpf){
-        int idCliente = Seleciona.SelecionaIdCliente(cpf);
-        try{    
+    private static void InserirConta(){
+        int idCliente = Seleciona.SelecionaIdCliente(client.getCpf());
+        client.setIdCliente(idCliente);
+        try{
             Connection c = Conection.ConectToDb();
             PreparedStatement stm = c.prepareStatement("INSERT INTO Conta(IdCliente) VALUES(?)");
-            stm.setInt(1, idCliente);
+            stm.setInt(1, client.getIdCliente());
             stm.executeUpdate();
             System.out.println("Conta Criada");
         } catch(SQLException e){
@@ -21,18 +24,18 @@ public class Inserir {
         }
     }
 
-    public static boolean InserirCliente(String nome, String cpf, String senha, String token){
+    public static boolean InserirCliente(){
         
         try{
             Connection c = Conection.ConectToDb();
             PreparedStatement stm = c.prepareStatement("INSERT INTO Cliente(nome, cpf, senha, token) VALUES(?, ?, ?, ?)");
-            stm.setString(1, nome);
-            stm.setString(2, cpf);
-            stm.setString(3, senha);
-            stm.setString(4, token);
+            stm.setString(1, client.getNome());
+            stm.setString(2, client.getCpf());
+            stm.setString(3, client.getSenha());
+            stm.setString(4, client.getTokenSession());
             stm.executeUpdate();
             System.out.println("Cliente Cadastrado com sucesso");
-            InserirConta(cpf);
+            InserirConta();
             return true;
         }catch(SQLException e){
             System.out.println(e);

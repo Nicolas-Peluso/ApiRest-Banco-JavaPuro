@@ -3,7 +3,9 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.nicolas.Aux.verifica;
 import com.nicolas.Cadastro.CadastroUsuario;
+import com.nicolas.Cliente.Cliente;
 import com.nicolas.Login.Login;
+import com.nicolas.MD5.Md5;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -69,22 +71,23 @@ public class HttpReq {
     }
 
     class LoginPost implements HttpHandler {
-        
         public void handle(HttpExchange exchange) throws IOException {
+            Cliente cliente = new Cliente();
+
             if ("POST".equals(exchange.getRequestMethod())) {
 
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 LoginRequest UserData = gson.fromJson(reader, LoginRequest.class);
 
-                String cpf = UserData.getCpf();
-                String Senha = UserData.getPassword();
+                cliente.setCpf(UserData.getCpf());
+                cliente.setSenha(Md5.EncriptaMd5(UserData.getPassword()));
 
                 String response = "";
 
-                String tokenRetornaCliente = Login.LoginVerifica(cpf, Senha);
+                String tokenRetornaCliente = Login.LoginVerifica();
 
-                if(!cpf.isEmpty() && !Senha.isEmpty()){
+                if(!cliente.getCpf().isEmpty() && !cliente.getSenha().isEmpty()){
                     switch (tokenRetornaCliente) {
                         case "":
                             response = "CPF nao cadastrado no banco Tente novamente";
@@ -122,19 +125,21 @@ public class HttpReq {
     //Cadastro de usuarios
     public class Cadastro implements HttpHandler{
             public void handle(HttpExchange exchange) throws IOException{
+                Cliente cliente = new Cliente();
                 if("POST".equals(exchange.getRequestMethod())){
 
                     Gson gson = new Gson();
                     InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                     RegistroRequest UserData = gson.fromJson(reader, RegistroRequest.class);
 
-                    String cpf = UserData.getCpf();
-                    String Senha = UserData.getPassword();
-                    String nome = UserData.getNome();
+                    cliente.setCpf(UserData.getCpf());
+                    cliente.setSenha(UserData.getPassword());
+                    cliente.setNome(UserData.getNome());
+
                     String response = "";
 
-                    if(((!cpf.isEmpty() && !Senha.isEmpty())) && !nome.isEmpty()){
-                        String validData = verifica.VerificaDados(cpf, Senha, true);
+                    if(((!cliente.getCpf().isEmpty() && !cliente.getSenha().isEmpty())) && !cliente.getNome().isEmpty()){
+                        String validData = verifica.VerificaDados(true);
                         switch(validData){
                             case "cpf":
                                 response = "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00) e ou Cpf esta incorreto"; //verificar se cpf é valido
@@ -152,7 +157,8 @@ public class HttpReq {
                     }
 
                     if(response.isEmpty()){
-                        response = CadastroUsuario.CadastrarUsuario(nome, Senha, cpf);
+                        CadastroUsuario.CadastrarUsuario();
+                        response = cliente.getTokenSession();
                         exchange.sendResponseHeaders(201, response.getBytes().length); // codigo 201 para informar que foi feito a mudança
                         OutputStream os = exchange.getResponseBody();
                         os.write(response.getBytes());

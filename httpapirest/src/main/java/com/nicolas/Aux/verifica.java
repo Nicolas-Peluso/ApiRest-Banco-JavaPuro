@@ -1,14 +1,17 @@
 package com.nicolas.Aux;
 import java.util.ArrayList;
 
+import com.nicolas.Cliente.Cliente;
+import com.nicolas.MD5.Md5;
 import com.nicolas.Manipulacao.Seleciona;
 
 public class verifica {
 
-    public static boolean VerificaCpf(String cpf){
+    public static boolean VerificaCpf(){
+        Cliente cliente = new Cliente();
         //Validação de CPF Matematicamanete;
         //REFATORAR
-        char[] cpfChar = cpf.toCharArray();
+        char[] cpfChar = cliente.getCpf().toCharArray();
         int Digverifcador1 = 0;
         int Digverifcador2 = 0;
         ArrayList<Integer> cpfInt = new ArrayList<>();
@@ -59,24 +62,26 @@ public class verifica {
         return true;
     }
 
-    public static String VerificaDados(String _cpf, String senha, boolean Cadastro){
-        boolean Cpfvalido = verifica.VerificaCpf(_cpf);
+    public static String VerificaDados(boolean Cadastro){
+        Cliente cliente = new Cliente();
+        boolean Cpfvalido = verifica.VerificaCpf();
         if(!Cpfvalido){
             return "cpf";
         }
 
         if(Cadastro){
-            String TempCpfBanco = Seleciona.SelectCpf(_cpf);
-            if(_cpf.equals(TempCpfBanco)){
+            String TempCpfBanco = Seleciona.SelectCpf(cliente.getCpf());
+            if(cliente.getCpf().equals(TempCpfBanco)){
                 return "cpfExiste";
             }
         }
 
-        if(!senha.isEmpty()){
-            char[] tempSenha = senha.toCharArray();
+        if(!cliente.getSenha().isEmpty()){
+            char[] tempSenha = cliente.getSenha().toCharArray();
             if(tempSenha.length < 8 || tempSenha.length >= 16){
                 return "senha";
             }
+            cliente.setSenha(Md5.EncriptaMd5(cliente.getSenha()));
         }
         
         return "";

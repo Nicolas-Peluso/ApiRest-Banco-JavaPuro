@@ -1,19 +1,16 @@
 package com.nicolas.Cadastro;
 
+import com.nicolas.Cliente.Cliente;
 import com.nicolas.Jwt.jwt;
-import com.nicolas.MD5.Md5;
 import com.nicolas.Manipulacao.Inserir;
 
 public class CadastroUsuario {
-    public static String CadastrarUsuario(String nome, String senha, String cpf){
-        String tempMd5 = Md5.EncriptaMd5(senha);
-        String tokenCadastro = jwt.GeraToken(cpf);
+    public static void CadastrarUsuario(){
+        Cliente cliente = new Cliente();
 
-        boolean CadsatroSucesso = Inserir.InserirCliente(nome, cpf, tempMd5, tokenCadastro);
+        cliente.setTokenSession(jwt.GeraToken(cliente.getCpf()));
 
-        if(CadsatroSucesso){
-            return tokenCadastro;
-        } 
-        return "";
+        boolean CadsatroSucesso = Inserir.InserirCliente();
+
     }
 }

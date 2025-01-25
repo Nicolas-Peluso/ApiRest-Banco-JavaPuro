@@ -9,7 +9,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 public class jwt {
 
-    public static String ValidaToken(String token){
+    public static boolean ValidaToken(String token){
         propriets j = new propriets();
         try {
             Algorithm algorithm = Algorithm.HMAC256(j.getJWT_SECRET_WORD());
@@ -21,10 +21,10 @@ public class jwt {
                 decodedJWT.getSubject();
                 decodedJWT.getClaim("role").asString();
 
-            return token;
+            return true;
         } catch (JWTVerificationException exception) {
             System.out.println(exception);
-            return "";
+            return false;
         }
     }
 
