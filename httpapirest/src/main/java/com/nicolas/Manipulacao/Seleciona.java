@@ -10,15 +10,31 @@ import java.sql.ResultSet;
 
 
 public class Seleciona {
-    
-    public static String SelectNome(){
+
+    public static int SelecionaIdCliente(String cpf){
         try{
             Connection c = Conection.ConectToDb();
-            PreparedStatement stm = c.prepareStatement("SELECT nome FROM Cliente WHERE cpf=?");
-            stm.setString(1, "453927394-23");
+            PreparedStatement stm = c.prepareStatement("SELECT IdCliente FROM Cliente WHERE cpf = ?");
+            stm.setString(1, cpf);
             ResultSet rs = stm.executeQuery();
             if(rs.next()){
-                return rs.getString("nome");
+                return rs.getInt("IdCliente");
+            }
+
+        }catch(SQLException e){
+            System.out.println(e);
+        }
+        return -1;
+    }
+    
+    public static String SelectCpf(String cpf){
+        try{
+            Connection c = Conection.ConectToDb();
+            PreparedStatement stm = c.prepareStatement("SELECT cpf FROM Cliente WHERE cpf=?");
+            stm.setString(1, cpf);
+            ResultSet rs = stm.executeQuery();
+            if(rs.next()){
+                return rs.getString("cpf");
             }
         } catch(SQLException e){
             System.out.println(e);

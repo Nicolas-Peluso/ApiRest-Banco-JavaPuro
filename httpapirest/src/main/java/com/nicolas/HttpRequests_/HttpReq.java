@@ -1,6 +1,7 @@
 package com.nicolas.HttpRequests_;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.nicolas.Aux.verifica;
 import com.nicolas.Cadastro.CadastroUsuario;
 import com.nicolas.Login.Login;
 import com.sun.net.httpserver.HttpExchange;
@@ -83,12 +84,22 @@ public class HttpReq {
 
                 String tokenRetornaCliente = Login.LoginVerifica(cpf, Senha);
 
-                if(tokenRetornaCliente.isEmpty()){
-                    response = "CPF INVALIDO";
-                }
-
-                if(tokenRetornaCliente.equals("SENHA")){
-                    response = "Senha incorreta tente novamente";
+                if(!cpf.isEmpty() && !Senha.isEmpty()){
+                    switch (tokenRetornaCliente) {
+                        case "":
+                            response = "CPF nao cadastrado no banco Tente novamente";
+                            break;
+                        case "SENHA":
+                            response = "Senha incorreta tente novamente";
+                            break;
+                        case "cpf":
+                            response = "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00), e ou Cpf esta incorreto ";
+                            break;
+                        default:
+                            break;
+                    }
+                }else{
+                    response = "Nenhum campo deve estar vazio";
                 }
 
                 if(!response.isEmpty()){
@@ -97,7 +108,7 @@ public class HttpReq {
                     os.write(response.getBytes());
                     os.close();
                 } else{
-                    exchange.sendResponseHeaders(200, tokenRetornaCliente.getBytes().length);
+                    exchange.sendResponseHeaders(201, tokenRetornaCliente.getBytes().length);
                     OutputStream os = exchange.getResponseBody(); 
                     os.write(tokenRetornaCliente.getBytes());
                     os.close();
@@ -108,6 +119,7 @@ public class HttpReq {
         }
     }
     
+    //Cadastro de usuarios
     public class Cadastro implements HttpHandler{
             public void handle(HttpExchange exchange) throws IOException{
                 if("POST".equals(exchange.getRequestMethod())){
@@ -121,16 +133,36 @@ public class HttpReq {
                     String nome = UserData.getNome();
                     String response = "";
 
-                    if((!cpf.isEmpty() || !Senha.isEmpty()) || !nome.isEmpty()){
-                        boolean validData = CadastroUsuario.VerificaDados(cpf, nome, Senha);
-                        if(validData){
-                            System.out.println("Cpf Valido"); //Validar cpf // Validar Nome // Validar Senha // Tudo certo Cadastrar Usuario no banco e Criar uma conta vinculado ao Id
-                        } else{
-                            System.out.println("Invalido");
+                    if(((!cpf.isEmpty() && !Senha.isEmpty())) && !nome.isEmpty()){
+                        String validData = verifica.VerificaDados(cpf, Senha, true);
+                        switch(validData){
+                            case "cpf":
+                                response = "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00) e ou Cpf esta incorreto"; //verificar se cpf é valido
+                                break;
+                            case "cpfExiste":
+                                response = "Cpf ja Cadastrado no Sistema faça login"; //verificar se cpf existe no banco
+                                break;   
+                            case "senha":
+                                response = "Senha Deve Ter mais de 8 digitos e nao deve ter mais de 16"; //verifca Se senha é maior que 8 e mor que 16
+                            default:
+                                break;
                         }
-                    } 
-                    else{
+                    } else{
                         response = "Nenhum Campo pode estar vazio";
+                    }
+
+                    if(response.isEmpty()){
+                        response = CadastroUsuario.CadastrarUsuario(nome, Senha, cpf);
+                        exchange.sendResponseHeaders(201, response.getBytes().length); // codigo 201 para informar que foi feito a mudança
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(response.getBytes());
+                        os.close();
+                    }
+                    else{
+                        exchange.sendResponseHeaders(200, response.getBytes().length); // 200 informando que deu certo a conexão mas algo deu errado na hora de inserir os dados
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(response.getBytes());
+                        os.close();
                     }
 
                 }else{

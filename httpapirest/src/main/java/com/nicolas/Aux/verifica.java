@@ -1,6 +1,8 @@
 package com.nicolas.Aux;
 import java.util.ArrayList;
 
+import com.nicolas.Manipulacao.Seleciona;
+
 public class verifica {
 
     public static boolean VerificaCpf(String cpf){
@@ -55,5 +57,28 @@ public class verifica {
         }
         
         return true;
+    }
+
+    public static String VerificaDados(String _cpf, String senha, boolean Cadastro){
+        boolean Cpfvalido = verifica.VerificaCpf(_cpf);
+        if(!Cpfvalido){
+            return "cpf";
+        }
+
+        if(Cadastro){
+            String TempCpfBanco = Seleciona.SelectCpf(_cpf);
+            if(_cpf.equals(TempCpfBanco)){
+                return "cpfExiste";
+            }
+        }
+
+        if(!senha.isEmpty()){
+            char[] tempSenha = senha.toCharArray();
+            if(tempSenha.length < 8 || tempSenha.length >= 16){
+                return "senha";
+            }
+        }
+        
+        return "";
     }
 }

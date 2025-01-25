@@ -1,16 +1,19 @@
 package com.nicolas.Cadastro;
 
-import com.nicolas.Aux.verifica;
+import com.nicolas.Jwt.jwt;
+import com.nicolas.MD5.Md5;
+import com.nicolas.Manipulacao.Inserir;
 
 public class CadastroUsuario {
+    public static String CadastrarUsuario(String nome, String senha, String cpf){
+        String tempMd5 = Md5.EncriptaMd5(senha);
+        String tokenCadastro = jwt.GeraToken(cpf);
 
-    public static boolean VerificaDados(String _cpf, String nome, String senha){
-        boolean Cpfvalido = verifica.VerificaCpf(_cpf);
-        if(Cpfvalido){
-            return true;
-        }
-        //verificar Senha
-        //Verificar Nome
-        return false;
+        boolean CadsatroSucesso = Inserir.InserirCliente(nome, cpf, tempMd5, tokenCadastro);
+
+        if(CadsatroSucesso){
+            return tokenCadastro;
+        } 
+        return "";
     }
 }
