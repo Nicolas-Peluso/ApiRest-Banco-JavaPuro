@@ -9,7 +9,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 public class jwt {
 
-    public static boolean ValidaToken(String token){
+    public static boolean ValidaToken(String token) {
         propriets j = new propriets();
         try {
             Algorithm algorithm = Algorithm.HMAC256(j.getJWT_SECRET_WORD());
@@ -18,9 +18,9 @@ public class jwt {
                     .build();
 
             DecodedJWT decodedJWT = verifier.verify(token);
-                decodedJWT.getSubject();
-                decodedJWT.getClaim("role").asString();
-                
+            decodedJWT.getSubject();
+            decodedJWT.getClaim("role").asString();
+
             return true;
         } catch (JWTVerificationException exception) {
             System.out.println(exception);
@@ -28,17 +28,17 @@ public class jwt {
         }
     }
 
-    public static String GeraToken(String cpf){
+    public static String GeraToken(String cpf) {
         propriets j = new propriets();
-        
+
         String NovoToken = JWT.create()
-        .withIssuer("Conta")
+                .withIssuer("Conta")
                 .withSubject(cpf)
                 .withClaim("role", "Cliente")
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 3600 * 1000))
                 .sign(Algorithm.HMAC256(j.getJWT_SECRET_WORD()));
-        
+
         return NovoToken;
     }
 }
