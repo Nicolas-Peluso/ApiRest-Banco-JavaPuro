@@ -218,7 +218,7 @@ public class HttpReq {
 
                 if (response.isEmpty()) {
                     CadastroUsuario.CadastrarUsuario();
-                    response = cliente.getTokenSession();
+                    response = "Usuario Cadastrado Com Sucesso";
                     exchange.sendResponseHeaders(201, response.getBytes().length); // codigo 201 para informar que foi
                                                                                    // feito a mudança
                     OutputStream os = exchange.getResponseBody();
@@ -299,7 +299,7 @@ public class HttpReq {
             Cliente cliente = new Cliente();
             if ("GET".equals(exchange.getRequestMethod())) {
                 String response = "";
-                double Saldores = 0.0;
+                boolean GetSaldoOk = false;
                 boolean logado = EstaLogado.Logado();
                 if (!logado) {
                     response = "Voce deve estar logado para realizar consultas";
@@ -312,16 +312,16 @@ public class HttpReq {
                             response = "token Exprirado faça login novamente";
                             break;
                         }
-                        Saldores = Saldo.ConsultaSaldo();
+                        GetSaldoOk = Saldo.ConsultaSaldo();
                         break;
 
                     } while (TokenValido);
                 }
-                if (Saldores == -1.0) {
+                if (!GetSaldoOk) {
                     response = "Tente novamente algo deu erra na manipulação dos dados";
                 }
                 if (response.isEmpty()) {
-                    response = Double.toString(Saldores);
+                    response = Double.toString(cliente.getConta().getSaldo());
                     exchange.sendResponseHeaders(200, response.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
                     os.write(response.getBytes());
@@ -366,12 +366,8 @@ public class HttpReq {
 
                     } while (TokenValido);
                 }
-                if (SaqueMon == -2.0) {
-                    response = "Saldo insuficiente Para Relizar um saque";
-                }
-
                 if (SaqueMon == -1.0) {
-                    response = "Algo deu errado durante a operação tente novamente";
+                    response = "Saldo insuficiente Para Relizar um saque";
                 }
 
                 if (response.isEmpty()) {

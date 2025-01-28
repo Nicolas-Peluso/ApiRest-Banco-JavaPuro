@@ -17,7 +17,7 @@ public class MiddleWareSetCors implements HttpHandler {
         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
         if ("OPTIONS".equals(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(200, -1);
+            exchange.sendResponseHeaders(201, -1);
             return;
         }
 
