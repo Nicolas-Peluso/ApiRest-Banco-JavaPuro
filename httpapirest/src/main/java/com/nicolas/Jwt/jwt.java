@@ -10,9 +10,8 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 public class jwt {
 
     public static boolean ValidaToken(String token) {
-        propriets j = new propriets();
         try {
-            Algorithm algorithm = Algorithm.HMAC256(j.getJWT_SECRET_WORD());
+            Algorithm algorithm = Algorithm.HMAC256(propriets.JWT_SECRET_WORD);
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer("Conta")
                     .build();
@@ -37,7 +36,7 @@ public class jwt {
                 .withClaim("role", "Cliente")
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 3600 * 1000))
-                .sign(Algorithm.HMAC256(j.getJWT_SECRET_WORD()));
+                .sign(Algorithm.HMAC256(propriets.JWT_SECRET_WORD));
 
         return NovoToken;
     }
