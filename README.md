@@ -1,5 +1,5 @@
 <h1>Descrição do Projeto</h1>
-    <p>Este projeto consiste na implementação de uma API REST para gerenciar contas bancárias, utilizando apenas as bibliotecas nativas do Java (sem frameworks como Spring Boot). O sistema possui funcionalidades básicas para criar contas, consultar saldo, realizar depósitos e saques, além de deletar contas.</p>
+    <p>Este projeto consiste na implementação de uma API para gerenciar contas bancárias, utilizando apenas as bibliotecas nativas do Java (sem frameworks como Spring Boot). O sistema possui funcionalidades básicas para criar contas, consultar saldo, realizar depósitos e saques, além de deletar contas.</p>
     <p>A autenticação é feita por meio de tokens de sessão para garantir a segurança nas operações. A senha dos clientes é armazenada criptografada em MD5.</p>
 
 <h2>Requisitos Funcionais</h2>
