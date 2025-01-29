@@ -28,8 +28,6 @@ public class jwt {
     }
 
     public static String GeraToken(String cpf) {
-        propriets j = new propriets();
-
         String NovoToken = JWT.create()
                 .withIssuer("Conta")
                 .withSubject(cpf)
