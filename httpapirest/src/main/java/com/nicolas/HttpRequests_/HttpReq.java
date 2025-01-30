@@ -2,7 +2,9 @@ package com.nicolas.HttpRequests_;
 
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.nicolas.Aux.Erro;
 import com.nicolas.Aux.EstaLogado;
+import com.nicolas.Aux.PassFine;
 import com.nicolas.Aux.verifica;
 import com.nicolas.Cadastro.CadastroUsuario;
 import com.nicolas.Cliente.Cliente;
@@ -132,41 +134,48 @@ public class HttpReq {
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 LoginRequest UserData = gson.fromJson(reader, LoginRequest.class);
+                
+                Erro erro = new Erro();
+                PassFine rs = new PassFine();
 
                 cliente.setCpf(UserData.getCpf());
-                cliente.setSenha(Md5.EncriptaMd5(UserData.getPassword()));
 
-                String response = "";
+                if (!cliente.getCpf().isEmpty() && !UserData.getPassword().isEmpty()) {
+                    //Encripta somente depois de verificar se a senha "pura" nao esta vazia
+                    cliente.setSenha(Md5.EncriptaMd5(UserData.getPassword()));
 
-                String tokenRetornaCliente = Login.LoginVerifica();
-
-                if (!cliente.getCpf().isEmpty() && !cliente.getSenha().isEmpty()) {
+                    String tokenRetornaCliente = Login.LoginVerifica();
                     switch (tokenRetornaCliente) {
                         case "":
-                            response = "CPF nao cadastrado no banco Tente novamente";
+                            erro.setResponse("CPF nao cadastrado no banco Tente novamente");
                             break;
                         case "SENHA":
-                            response = "Senha incorreta tente novamente";
+                            erro.setResponse("Senha incorreta tente novamente");
                             break;
                         case "cpf":
-                            response = "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00), e ou Cpf esta incorreto ";
+                            erro.setResponse(
+                                    "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00), e ou Cpf esta incorreto");
                             break;
                         default:
                             break;
                     }
                 } else {
-                    response = "Nenhum campo deve estar vazio";
+                    erro.setResponse("Nenhum campo deve estar vazio");
                 }
-
-                if (!response.isEmpty()) {
+                if (!erro.getResponse().isEmpty()) {
+                    String response = gson.toJson(erro);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
                     exchange.sendResponseHeaders(200, response.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(201, tokenRetornaCliente.getBytes().length);
+                    rs.setMessage("Login Realizado Com sucesso");
+                    String res = gson.toJson(rs);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(201, res.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(tokenRetornaCliente.getBytes());
+                    os.write(res.getBytes());
                     os.close();
                 }
             } else {
@@ -175,7 +184,6 @@ public class HttpReq {
         }
     }
 
-    // Cadastro de usuarios
     public class Cadastro implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
             Cliente cliente = new Cliente();
@@ -185,51 +193,49 @@ public class HttpReq {
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 RegistroRequest UserData = gson.fromJson(reader, RegistroRequest.class);
+                Erro erro = new Erro();
+                PassFine res = new PassFine();
 
                 cliente.setCpf(UserData.getCpf());
                 cliente.setSenha(UserData.getPassword());
                 cliente.setNome(UserData.getNome());
 
-                String response = "";
-
                 if (((!cliente.getCpf().isEmpty() && !cliente.getSenha().isEmpty())) && !cliente.getNome().isEmpty()) {
                     String validData = verifica.VerificaDados(true);
                     switch (validData) {
                         case "cpf":
-                            response = "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00) e ou Cpf esta incorreto"; // verificar
-                                                                                                                                       // se
-                                                                                                                                       // cpf
-                                                                                                                                       // é
-                                                                                                                                       // valido
+                            erro.setResponse(
+                                    "Cpf Invalido Verifique, cpf Deve seguir esse padrão (000.000.000-00) e ou Cpf esta incorreto");
+                            // verificar se cpf é valido
                             break;
                         case "cpfExiste":
-                            response = "Cpf ja Cadastrado no Sistema faça login"; // verificar se cpf existe no banco
+                            erro.setResponse("Cpf ja Cadastrado no Sistema faça login"); // verificar se cpf existe no
+                                                                                         // banco
                             break;
                         case "senha":
-                            response = "Senha Deve Ter mais de 8 digitos e nao deve ter mais de 16"; // verifca Se senha
-                                                                                                     // é maior que 8 e
-                                                                                                     // mor que 16
+                            erro.setResponse("Senha Deve Ter mais de 8 digitos e nao deve ter mais de 16");
                         default:
                             break;
                     }
                 } else {
-                    response = "Nenhum Campo pode estar vazio";
+                    erro.setResponse("Nenhum Campo pode estar vazio");
                 }
 
-                if (response.isEmpty()) {
+                if (erro.getResponse().isEmpty()) {
                     CadastroUsuario.CadastrarUsuario();
-                    response = "Usuario Cadastrado Com Sucesso";
-                    exchange.sendResponseHeaders(201, response.getBytes().length); // codigo 201 para informar que foi
-                                                                                   // feito a mudança
+                    res.setMessage("Usuario Cadastrado Com Sucesso");
+                    String rs = gson.toJson(res);
+                    exchange.getResponseHeaders().set("Contente-type", "application/json");
+                    exchange.sendResponseHeaders(201, rs.getBytes().length); // codigo 201 para informar que foi feito a mudança
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(rs.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(200, response.getBytes().length); // 200 informando que deu certo a
-                                                                                   // conexão mas algo deu errado na
-                                                                                   // hora de inserir os dados
+                    String resErro = gson.toJson(erro);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(200, resErro.getBytes().length); // 200 informando que deu certo na conexão mas algo deu errado na hora de inserir os dados
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(resErro.getBytes());
                     os.close();
                 }
 
@@ -239,7 +245,6 @@ public class HttpReq {
         }
     }
 
-    // Despoitar
     public class Despositar implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
             Cliente cliente = new Cliente();
@@ -249,45 +254,50 @@ public class HttpReq {
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 DespotioRequest UserData = gson.fromJson(reader, DespotioRequest.class);
+                
+                Erro erro = new Erro();
+                PassFine res = new PassFine();
 
                 String cpf = UserData.getCpf();
                 double valor = UserData.getValor();
-                String response = "";
                 boolean logado = false;
 
                 if (!(valor == 0.0) && !cpf.isEmpty()) {
                     logado = EstaLogado.Logado();
                     if (!logado) {
-                        response = "é necessario estar logado em uma conta para realizar essa operação";
+                        erro.setResponse("é necessario estar logado em uma conta para realizar essa operação");
                     }
 
                     while (logado) {
                         if (!jwt.ValidaToken(cliente.getTokenSession())) {
-                            response = "Token De Sessão invalido Faça login novamente";
+                            erro.setResponse("Token De Sessão invalido Faça login novamente");
                             break;
                         }
                         boolean DespitoFeito = Deposito.DepositoConta(cpf, valor);
                         if (!DespitoFeito) {
-                            response = "Algo Deu Errado na operação de deposito Verifique os dados";
+                            erro.setResponse("Algo Deu Errado na operação de deposito Verifique os dados");
                             break;
                         }
-                        response = "";
                         break;
                     }
                 } else {
-                    response = "cpf nao pode ser vazio e/ou Valor deve ser maior que 0";
+                    erro.setResponse("cpf nao pode ser vazio e/ou Valor de deposito deve ser maior que 0");
                 }
 
-                if (response.isEmpty()) {
-                    response = "Deposito Realizado com sucesso";
-                    exchange.sendResponseHeaders(201, response.getBytes().length);
+                if (erro.getResponse().isEmpty()) {
+                    res.setMessage("Deposito realizado com sucesso");
+                    String rs = gson.toJson(res);
+                    exchange.getResponseHeaders().set("Contente-type", "application/json");
+                    exchange.sendResponseHeaders(201, rs.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(rs.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(301, response.getBytes().length); // Nao permitido
+                    String resErro = gson.toJson(erro);
+                    exchange.getResponseHeaders().set("Contente-type", "application/json");
+                    exchange.sendResponseHeaders(301, resErro.getBytes().length); // Nao permitido
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(resErro.getBytes());
                     os.close();
                 }
             }
@@ -298,18 +308,22 @@ public class HttpReq {
         public void handle(HttpExchange exchange) throws IOException {
             Cliente cliente = new Cliente();
             if ("GET".equals(exchange.getRequestMethod())) {
-                String response = "";
-                boolean GetSaldoOk = false;
+                
+                Gson gson = new Gson();
+                Erro erro = new Erro();
+                PassFine res = new PassFine();
+
+                boolean GetSaldoOk = true;
                 boolean logado = EstaLogado.Logado();
                 if (!logado) {
-                    response = "Voce deve estar logado para realizar consultas";
+                    erro.setResponse("Voce deve estar logado para realizar consultas");
                 }
 
                 if (logado) {
                     boolean TokenValido = false;
                     do {
                         if (!(jwt.ValidaToken(cliente.getTokenSession()))) {
-                            response = "token Exprirado faça login novamente";
+                            erro.setResponse("token Exprirado faça login novamente");
                             break;
                         }
                         GetSaldoOk = Saldo.ConsultaSaldo();
@@ -318,18 +332,22 @@ public class HttpReq {
                     } while (TokenValido);
                 }
                 if (!GetSaldoOk) {
-                    response = "Tente novamente algo deu erra na manipulação dos dados";
+                    erro.setResponse("Tente novamente algo deu erra na manipulação dos dados");
                 }
-                if (response.isEmpty()) {
-                    response = Double.toString(cliente.getConta().getSaldo());
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                if (erro.getResponse().isEmpty()) {
+                    res.setMessage(Double.toString(cliente.getConta().getSaldo()));
+                    String rs = gson.toJson(res);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(200, rs.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(rs.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    String resErro = gson.toJson(erro);
+                    exchange.sendResponseHeaders(200, resErro.getBytes().length);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(resErro.getBytes());
                     os.close();
                 }
             }
@@ -341,24 +359,32 @@ public class HttpReq {
 
             Cliente cliente = new Cliente();
             if ("POST".equals(exchange.getRequestMethod())) {
+
                 Gson gson = new Gson();
                 InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                 SacarReq UserData = gson.fromJson(reader, SacarReq.class);
 
+                Erro erro = new Erro();
+                PassFine res = new PassFine();
+
                 double valor = UserData.getValor();
 
-                String response = "";
                 double SaqueMon = 0.0;
                 boolean logado = EstaLogado.Logado();
+
                 if (!logado) {
-                    response = "Voce deve estar logado para realizar consultas";
+                    erro.setResponse("Voce deve estar logado para realizar consultas");
                 }
 
                 if (logado) {
                     boolean TokenValido = false;
                     do {
                         if (!(jwt.ValidaToken(cliente.getTokenSession()))) {
-                            response = "token Exprirado faça login novamente";
+                            erro.setResponse("token Exprirado faça login novamente");
+                            break;
+                        }
+                        if (valor <= 0) {
+                            erro.setResponse("Impossivel sacar esse valor.");
                             break;
                         }
                         SaqueMon = Saque.Sacar(valor);
@@ -367,19 +393,24 @@ public class HttpReq {
                     } while (TokenValido);
                 }
                 if (SaqueMon == -1.0) {
-                    response = "Saldo insuficiente Para Relizar um saque";
-                }
+                    erro.setResponse("Saldo insuficiente Para Relizar um saque");
+                }  
 
-                if (response.isEmpty()) {
-                    response = Double.toString(SaqueMon);
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                if (erro.getResponse().isEmpty()) {
+                    //Retorna o valor do saque;
+                    res.setMessage(Double.toString(SaqueMon));
+                    String rs = gson.toJson(res);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(200, rs.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(rs.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    String Errores = gson.toJson(erro);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(200, Errores.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(Errores.getBytes());
                     os.close();
                 }
             }
@@ -389,26 +420,34 @@ public class HttpReq {
     public class SairConta implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
             if ("GET".equals(exchange.getRequestMethod())) {
-                String response = "";
                 boolean logado = EstaLogado.Logado();
+                
+                Gson gson = new Gson();
+                Erro erro = new Erro();
+                PassFine res = new PassFine();
+
                 if (!logado) {
-                    response = "Voce deve estar logado para realizar consultas";
+                    erro.setResponse("Voce deve estar logado para realizar consultas");
                 }
 
                 if (logado) {
                     SairDaConta.sair();
                 }
 
-                if (response.isEmpty()) {
-                    response = "Adeus";
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                if (erro.getResponse().isEmpty()) {
+                    res.setMessage("Saindo");
+                    String rs = gson.toJson(res);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(200, rs.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(rs.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    String ResErro = gson.toJson(erro);
+                    exchange.getResponseHeaders().set("Content-type", "application/json");
+                    exchange.sendResponseHeaders(200, ResErro.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(ResErro.getBytes());
                     os.close();
                 }
             }
@@ -419,10 +458,14 @@ public class HttpReq {
         public void handle(HttpExchange exchange) throws IOException {
             Cliente cliente = new Cliente();
             if ("GET".equals(exchange.getRequestMethod())) {
-                String response = "";
                 boolean logado = EstaLogado.Logado();
+
+                Gson gson = new Gson();
+                Erro erro = new Erro();
+                PassFine res = new PassFine();
+
                 if (!logado) {
-                    response = "Voce deve estar logado para realizar consultas";
+                    erro.setResponse("Voce deve estar logado para realizar consultas");
                 }
 
                 while (logado) {
@@ -430,25 +473,29 @@ public class HttpReq {
                         boolean TemSaldo = com.nicolas.Operacoes.DeletarConta.Deletar();
                         System.err.println(TemSaldo);
                         if (!TemSaldo) {
-                            response = "Nao é possivel deletar uma conta que possui saldo nela";
+                            erro.setResponse("Nao é possivel deletar uma conta que possui saldo nela");
                         }
                         break;
                     } else {
-                        response = "Token invalido faca login novamete";
+                        erro.setResponse("Token invalido faca login novamete");
                     }
                     break;
                 }
 
-                if (response.isEmpty()) {
-                    response = "Conta Deletada Com sucesso";
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                if (erro.getResponse().isEmpty()) {
+
+                    res.setMessage("Conta Deletada Com sucesso");
+                    String rs = gson.toJson(res);
+
+                    exchange.sendResponseHeaders(200, rs.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(rs.getBytes());
                     os.close();
                 } else {
-                    exchange.sendResponseHeaders(200, response.getBytes().length);
+                    String ErroRes = gson.toJson(erro);
+                    exchange.sendResponseHeaders(200, ErroRes.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
-                    os.write(response.getBytes());
+                    os.write(ErroRes.getBytes());
                     os.close();
                 }
             }
